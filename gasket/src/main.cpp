@@ -6,8 +6,6 @@
 #include <osgUtil/SmoothingVisitor>
 #include <stdlib.h>
 
-#include "logfilehandler.hpp"
-
 osg::Vec3Array* SierpinskiGasket()
 {
     osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array{};
@@ -34,8 +32,6 @@ osg::Vec3Array* SierpinskiGasket()
 
 int main()
 {
-    osg::setNotifyLevel(osg::INFO);
-    osg::setNotifyHandler(new LogFileHandler("osgLog.txt"));
     osg::ref_ptr<osg::Vec3Array> vertices  = SierpinskiGasket();
     osg::ref_ptr<osg::Vec4Array> color = new osg::Vec4Array{};
     osg::ref_ptr<osg::Vec3Array> norms = new osg::Vec3Array{};
