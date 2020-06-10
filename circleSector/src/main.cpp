@@ -5,8 +5,6 @@
 #include <iostream>
 #include <list>
 #include <vector>
-#include <utility>
-#include <iterator>
 
 // Careful with fidelity!!! 4 is a damn good circle, 5 is cleannnnn. above that your asking for performance trouble.
 // Vec one, and two have to be in local coordinate space or this sector algorithm will not be oriented correctly.
