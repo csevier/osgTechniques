@@ -8,7 +8,7 @@
 
 #include "logfilehandler.hpp"
 
-osg::Vec3Array* SierpisnkiGasket()
+osg::Vec3Array* SierpinskiGasket()
 {
     osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array{};
 
@@ -36,7 +36,7 @@ int main()
 {
     osg::setNotifyLevel(osg::INFO);
     osg::setNotifyHandler(new LogFileHandler("osgLog.txt"));
-    osg::ref_ptr<osg::Vec3Array> vertices  = SierpisnkiGasket();
+    osg::ref_ptr<osg::Vec3Array> vertices  = SierpinskiGasket();
     osg::ref_ptr<osg::Vec4Array> color = new osg::Vec4Array{};
     osg::ref_ptr<osg::Vec3Array> norms = new osg::Vec3Array{};
     norms->push_back(osg::Vec3(0,-1,0));
