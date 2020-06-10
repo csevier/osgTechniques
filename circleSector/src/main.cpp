@@ -8,35 +8,33 @@
 #include <utility>
 #include <iterator>
 
-// Careful with fidelity!!! 4 is a damn good circle, 5 is clean as perception could give. above that your asking for performance trouble.
-// Vec one, and two have to bee in local coordinate space or this sector algorithm will not be oriented correctly.
-std::list<osg::Vec3> PointsOnUnitSphereGreaterCircle(osg::Vec3 one, osg::Vec3 two, int fidelityIterations = 1)
+// Careful with fidelity!!! 4 is a damn good circle, 5 is cleannnnn. above that your asking for performance trouble.
+// Vec one, and two have to be in local coordinate space or this sector algorithm will not be oriented correctly.
+std::list<osg::Vec3> PointsOnUnitSphereGreaterCircle(osg::Vec3 start, osg::Vec3 termination, int fidelityIterations = 1)
 {
     std::list<osg::Vec3> verts{}; // list for performant insertion,
-    one.normalize(); // MUST NORMALIZE, its correct in 3d space because of the unit sphere!!.
-    two.normalize();// MUST NORMALIZE, its correct in 3d space because of the unit sphere!!.
-    verts.push_back(one);
-    verts.push_back(two);
+    start.normalize(); // MUST NORMALIZE, its correct in 3d space because of the unit sphere!!.
+    termination.normalize();// MUST NORMALIZE, its correct in 3d space because of the unit sphere!!.
+    verts.push_back(start);
+    verts.push_back(termination);
 
     for(int i =0; i <fidelityIterations; i++)
     {
        std::vector<std::pair<std::list<osg::Vec3>::iterator,osg::Vec3>> insertionPositions{};
-       for(int i = 0; i < (verts.size()-1); i++) // not using iterators for clean accessing, int +/- iter doent work, you have to move the iter around, may as well do it cleanly.
+       for(std::list<osg::Vec3>::iterator currentPostion = verts.begin(); currentPostion != --verts.end(); /*iter increas in body*/)
        {
-           std::list<osg::Vec3>::iterator currentPostion = verts.begin(); // lists dont support index access.
-           std::advance(currentPostion, i);
            osg::Vec3 left = *(currentPostion);
            osg::Vec3 right = *(++currentPostion);
            osg::Vec3 mid = (left + right) / 2;
            mid.normalize(); // MUST NORMALIZE, its correct in 3d space because of the unit sphere!!.
-           insertionPositions.push_back(std::make_pair(currentPostion, mid));
+           insertionPositions.push_back(std::make_pair(currentPostion, mid)); // add the midpoint AFTER left vertex of the calculation.
        }
        // add new verts to list at correct positions.
        for(auto pair : insertionPositions)
        {
            verts.insert(pair.first, pair.second);
        }
-       // clear it.
+       // you must clear the verts that have been added, the new round will calculate again with the new points.
        insertionPositions.clear();
     }
     return verts;
@@ -47,22 +45,18 @@ int main()
     osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array{};
     //triangle plane
     osg::Vec3 origin = osg::Vec3(0,0,0);
-
-
-    osg::Vec3 right = osg::Vec3(-1,0,0.0001);
-    right.normalize(); // now on the unit sphere.
-
-    osg::Vec3 left = osg::Vec3(1,0,0);
-    left.normalize(); // now on the unit sphere.
-
+    osg::Vec3 start = osg::Vec3(-1,0,0.0001);
+    osg::Vec3 termination = osg::Vec3(1,0,0);
     vertices->push_back(origin);
-    auto c = PointsOnUnitSphereGreaterCircle(left, right, 5);
-    for(auto v:c )
+
+    auto verts = PointsOnUnitSphereGreaterCircle(start, termination, 4);
+
+    for(auto vert:verts )
     {
-        vertices->push_back(v);
+        vertices->push_back(vert);
     }
 
-    float angle = std::acos((left * right) / (right.length() * left.length())) * 180 / 3.14;
+    float angle = std::acos((start * termination) / (termination.length() * start.length())) * 180 / 3.14;
     std::cout << angle;
 
     osg::ref_ptr<osg::Vec3Array> normals = new osg::Vec3Array{};
