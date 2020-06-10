@@ -3,15 +3,43 @@
 #include <osg/Geometry>
 #include <osg/Vec3>
 #include <iostream>
+#include <list>
+#include <vector>
+#include <utility>
+#include <iterator>
 
-
-osg::Vec3 MidPointDivide(osg::Vec3 one, osg::Vec3 two)
+// Careful with fidelity!!! 4 is a damn good circle, 5 is clean as perception could give. above that your asking for performance trouble.
+// Vec one, and two have to bee in local coordinate space or this sector algorithm will not be oriented correctly.
+std::list<osg::Vec3> PointsOnUnitSphereGreaterCircle(osg::Vec3 one, osg::Vec3 two, int fidelityIterations = 1)
 {
-    one.normalize();
-    two.normalize();
-    osg::Vec3 mid = (one + two) / 2;
-    mid.normalize();
-    return mid;
+    std::list<osg::Vec3> verts{}; // list for performant insertion,
+    one.normalize(); // MUST NORMALIZE, its correct in 3d space because of the unit sphere!!.
+    two.normalize();// MUST NORMALIZE, its correct in 3d space because of the unit sphere!!.
+    verts.push_back(one);
+    verts.push_back(two);
+
+    for(int i =0; i <fidelityIterations; i++)
+    {
+       std::vector<std::pair<std::list<osg::Vec3>::iterator,osg::Vec3>> insertionPositions{};
+       for(int i = 0; i < (verts.size()-1); i++) // not using iterators for clean accessing, int +/- iter doent work, you have to move the iter around, may as well do it cleanly.
+       {
+           std::list<osg::Vec3>::iterator currentPostion = verts.begin(); // lists dont support index access.
+           std::advance(currentPostion, i);
+           osg::Vec3 left = *(currentPostion);
+           osg::Vec3 right = *(++currentPostion);
+           osg::Vec3 mid = (left + right) / 2;
+           mid.normalize(); // MUST NORMALIZE, its correct in 3d space because of the unit sphere!!.
+           insertionPositions.push_back(std::make_pair(currentPostion, mid));
+       }
+       // add new verts to list at correct positions.
+       for(auto pair : insertionPositions)
+       {
+           verts.insert(pair.first, pair.second);
+       }
+       // clear it.
+       insertionPositions.clear();
+    }
+    return verts;
 }
 
 int main()
@@ -21,27 +49,18 @@ int main()
     osg::Vec3 origin = osg::Vec3(0,0,0);
 
 
-    osg::Vec3 right = osg::Vec3(0,0,-1);
+    osg::Vec3 right = osg::Vec3(-1,0,0.0001);
     right.normalize(); // now on the unit sphere.
 
     osg::Vec3 left = osg::Vec3(1,0,0);
     left.normalize(); // now on the unit sphere.
 
-    osg::Vec3 mid = (right + left) /2;
-    mid.normalize();
-
-    osg::Vec3 mid1 = (left + mid) /2;
-    mid1.normalize();
-
-    osg::Vec3 mid2 = (right + mid) /2;
-    mid2.normalize();
-
     vertices->push_back(origin);
-    vertices->push_back(left);
-    vertices->push_back(mid1);
-    vertices->push_back(mid);
-    vertices->push_back(mid2);
-    vertices->push_back(right); // finish
+    auto c = PointsOnUnitSphereGreaterCircle(left, right, 5);
+    for(auto v:c )
+    {
+        vertices->push_back(v);
+    }
 
     float angle = std::acos((left * right) / (right.length() * left.length())) * 180 / 3.14;
     std::cout << angle;
